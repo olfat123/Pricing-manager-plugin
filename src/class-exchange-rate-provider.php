@@ -94,7 +94,17 @@ class Exchange_Rate_Provider {
 		}
 
 		$payload = json_decode( wp_remote_retrieve_body( $response ), true );
-		$rate    = isset( $payload['rates']['EGP'] ) ? (float) $payload['rates']['EGP'] : 0;
+
+		if ( ! is_array( $payload ) ) {
+			$this->error_handler->report(
+				'exchange_rate_invalid_payload',
+				__( 'Pricing Manager received an invalid online exchange-rate response.', 'pricing-manager' )
+			);
+
+			return 0;
+		}
+
+		$rate = isset( $payload['rates']['EGP'] ) && is_numeric( $payload['rates']['EGP'] ) ? (float) $payload['rates']['EGP'] : 0;
 
 		if ( $rate <= 0 ) {
 			$this->error_handler->report(

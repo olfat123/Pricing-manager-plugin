@@ -30,7 +30,9 @@ class Product_Meta_Repository {
 			return null;
 		}
 
-		return max( 0, (float) $value );
+		$base_price = (float) $value;
+
+		return $base_price > 0 ? $base_price : null;
 	}
 
 	/**
@@ -47,6 +49,17 @@ class Product_Meta_Repository {
 		}
 
 		return max( 0, (float) $value );
+	}
+
+	/**
+	 * Check whether a variation has any managed pricing metadata.
+	 *
+	 * @param int $variation_id Variation ID.
+	 * @return bool
+	 */
+	public function has_pricing_metadata( int $variation_id ): bool {
+		return metadata_exists( 'post', $variation_id, self::META_BASE_PRICE_USD )
+			|| metadata_exists( 'post', $variation_id, self::META_PROFIT_MARGIN );
 	}
 
 	/**
