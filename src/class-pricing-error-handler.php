@@ -15,7 +15,9 @@ defined( 'ABSPATH' ) || exit;
 class Pricing_Error_Handler {
 
 	private const OPTION_RECENT_ERRORS = 'pricing_manager_recent_errors';
+	private const TRANSIENT_PREFIX     = 'pricing_manager_error_';
 	private const MAX_RECENT_ERRORS    = 10;
+	private const ERROR_TTL            = 300;
 
 	/**
 	 * Register WordPress hooks.
@@ -35,6 +37,10 @@ class Pricing_Error_Handler {
 	 * @return void
 	 */
 	public function report( string $code, string $message, array $context = array() ): void {
+		if ( $this->is_recent_duplicate( $code, $context ) ) {
+			return;
+		}
+
 		$this->log_error( $code, $message, $context );
 		$this->store_recent_error( $code, $message );
 	}
@@ -46,6 +52,10 @@ class Pricing_Error_Handler {
 	 */
 	public function render_admin_notice(): void {
 		if ( ! current_user_can( Admin_Capabilities::manage_pricing() ) ) {
+			return;
+		}
+
+		if ( ! $this->should_render_admin_notice() ) {
 			return;
 		}
 
@@ -114,5 +124,47 @@ class Pricing_Error_Handler {
 		);
 
 		update_option( self::OPTION_RECENT_ERRORS, array_slice( $errors, 0, self::MAX_RECENT_ERRORS ), false );
+	}
+
+	/**
+	 * Check whether pricing notices should render on the current screen.
+	 *
+	 * @return bool
+	 */
+	private function should_render_admin_notice(): bool {
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+
+		if ( ! $screen ) {
+			return false;
+		}
+
+		$allowed_screen_ids = array(
+			'product',
+			'shop_order',
+			'woocommerce_page_wc-orders',
+			'woocommerce_page_pricing-manager-dashboard',
+			'woocommerce_page_wc-settings',
+		);
+
+		return in_array( $screen->id, $allowed_screen_ids, true );
+	}
+
+	/**
+	 * Check and record whether an error was recently reported.
+	 *
+	 * @param string $code    Error code.
+	 * @param array  $context Error context.
+	 * @return bool
+	 */
+	private function is_recent_duplicate( string $code, array $context ): bool {
+		$fingerprint = self::TRANSIENT_PREFIX . md5( $code . wp_json_encode( $context ) );
+
+		if ( get_transient( $fingerprint ) ) {
+			return true;
+		}
+
+		set_transient( $fingerprint, 1, self::ERROR_TTL );
+
+		return false;
 	}
 }
