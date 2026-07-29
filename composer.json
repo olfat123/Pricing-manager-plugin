@@ -1,0 +1,43 @@
+{
+	"name": "yallacoins/pricing_manager",
+	"license": "GPL-3.0",
+	"require-dev": {
+		"automattic/jetpack-autoloader": "^2.11",
+		"woocommerce/woocommerce-sniffs": "*",
+		"wp-coding-standards/wpcs": "*",
+		"dealerdirect/phpcodesniffer-composer-installer": "*"
+	},
+	"autoload": {
+		"psr-4": {
+			"Yallacoins\\PricingManager\\": "src/"
+		}
+	},
+	"archive": {
+		"exclude": [
+			"!/assets",
+			"!/languages",
+			"!/vendor",
+			"composer.json",
+			"composer.lock",
+			"package.json",
+			".gitignore",
+			".nvmrc",
+			"README.md",
+			"version-bump.js"
+		]
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true,
+			"automattic/jetpack-autoloader": true
+		}
+	},
+	"scripts": {
+		"wpcs": [
+			"./vendor/bin/phpcs . --ignore=vendor,.git,assets,node_modules --standard=WooCommerce-Core,WordPress-Core,WordPress-Extra,WordPress-Docs  --report-full --report-summary --colors -s"
+		],
+		"wpcs:fix": [
+			"./vendor/bin/phpcbf . --ignore=vendor,.git,assets,node_modules --standard=WooCommerce-Core,WordPress-Core,WordPress-Extra,WordPress-Docs  --report-full --report-summary --colors"
+		]
+	}
+}
