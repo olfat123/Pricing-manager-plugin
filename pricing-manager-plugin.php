@@ -96,6 +96,8 @@ if ( file_exists( plugin_dir_path( __FILE__ ) . '/vendor/autoload_packages.php' 
 }
 
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-settings-repository.php';
+require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-admin-capabilities.php';
+require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-pricing-error-handler.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-exchange-rate-provider.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-product-meta-repository.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-price-calculator.php';

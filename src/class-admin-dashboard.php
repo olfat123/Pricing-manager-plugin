@@ -51,7 +51,7 @@ class Admin_Dashboard {
 	 * @return void
 	 */
 	public function add_menu_page(): void {
-		$required_capability = $this->get_required_capability();
+		$required_capability = Admin_Capabilities::manage_pricing();
 
 		$hook_suffix = add_submenu_page(
 			'woocommerce',
@@ -71,7 +71,7 @@ class Admin_Dashboard {
 	 * @return void
 	 */
 	public function render_page(): void {
-		if ( ! current_user_can( $this->get_required_capability() ) ) {
+		if ( ! current_user_can( Admin_Capabilities::manage_pricing() ) ) {
 			wp_die( esc_html__( 'You do not have permission to view pricing analytics.', 'pricing-manager' ) );
 		}
 
@@ -363,15 +363,6 @@ class Admin_Dashboard {
 			esc_html( $label ),
 			esc_html( html_entity_decode( $text ) )
 		);
-	}
-
-	/**
-	 * Get the capability required to view the dashboard.
-	 *
-	 * @return string
-	 */
-	private function get_required_capability(): string {
-		return class_exists( 'WooCommerce' ) ? 'manage_woocommerce' : 'manage_options';
 	}
 
 	/**

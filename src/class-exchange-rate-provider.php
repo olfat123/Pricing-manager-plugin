@@ -24,12 +24,21 @@ class Exchange_Rate_Provider {
 	private Settings_Repository $settings_repository;
 
 	/**
+	 * Pricing error handler.
+	 *
+	 * @var Pricing_Error_Handler
+	 */
+	private Pricing_Error_Handler $error_handler;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param Settings_Repository $settings_repository Settings repository.
+	 * @param Settings_Repository   $settings_repository Settings repository.
+	 * @param Pricing_Error_Handler $error_handler       Pricing error handler.
 	 */
-	public function __construct( Settings_Repository $settings_repository ) {
+	public function __construct( Settings_Repository $settings_repository, Pricing_Error_Handler $error_handler ) {
 		$this->settings_repository = $settings_repository;
+		$this->error_handler       = $error_handler;
 	}
 
 	/**
@@ -55,19 +64,44 @@ class Exchange_Rate_Provider {
 
 		set_transient( Settings_Repository::TRANSIENT_RATE_LOCK, 1, HOUR_IN_SECONDS );
 
-		$response = wp_safe_remote_get(
-			self::RATE_ENDPOINT,
-			array(
-				'timeout' => 8,
-			)
-		);
+		try {
+			$response = wp_safe_remote_get(
+				self::RATE_ENDPOINT,
+				array(
+					'timeout' => 8,
+				)
+			);
+		} catch ( \Throwable $exception ) {
+			$this->error_handler->report(
+				'exchange_rate_exception',
+				__( 'Pricing Manager could not fetch the online USD to EGP exchange rate.', 'pricing-manager' ),
+				array( 'exception' => $exception->getMessage() )
+			);
+
+			return 0;
+		}
 
 		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			$this->error_handler->report(
+				'exchange_rate_unavailable',
+				__( 'Pricing Manager could not fetch the online USD to EGP exchange rate.', 'pricing-manager' ),
+				array(
+					'response_code' => is_wp_error( $response ) ? $response->get_error_code() : wp_remote_retrieve_response_code( $response ),
+				)
+			);
+
 			return 0;
 		}
 
 		$payload = json_decode( wp_remote_retrieve_body( $response ), true );
 		$rate    = isset( $payload['rates']['EGP'] ) ? (float) $payload['rates']['EGP'] : 0;
+
+		if ( $rate <= 0 ) {
+			$this->error_handler->report(
+				'exchange_rate_missing',
+				__( 'Pricing Manager could not find a valid EGP rate in the online exchange-rate response.', 'pricing-manager' )
+			);
+		}
 
 		if ( $rate > 0 ) {
 			$this->settings_repository->save_online_exchange_rate( $rate );
