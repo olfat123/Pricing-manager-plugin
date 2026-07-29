@@ -31,6 +31,13 @@ class Pricing_Manager {
 	private Settings_Repository $settings_repository;
 
 	/**
+	 * Pricing error handler.
+	 *
+	 * @var Pricing_Error_Handler
+	 */
+	private Pricing_Error_Handler $error_handler;
+
+	/**
 	 * Exchange rate provider.
 	 *
 	 * @var Exchange_Rate_Provider
@@ -56,9 +63,10 @@ class Pricing_Manager {
 	 */
 	public function __construct() {
 		$this->settings_repository     = new Settings_Repository();
-		$this->exchange_rate_provider  = new Exchange_Rate_Provider( $this->settings_repository );
+		$this->error_handler           = new Pricing_Error_Handler();
+		$this->exchange_rate_provider  = new Exchange_Rate_Provider( $this->settings_repository, $this->error_handler );
 		$this->product_meta_repository = new Product_Meta_Repository();
-		$this->price_calculator        = new Price_Calculator( $this->exchange_rate_provider, $this->product_meta_repository );
+		$this->price_calculator        = new Price_Calculator( $this->exchange_rate_provider, $this->product_meta_repository, $this->error_handler );
 
 		add_action( 'init', array( $this, 'load_plugin' ), 0 );
 		add_action( 'pricing_manager_plugin_activated', array( $this, 'activation_hooks' ) );
@@ -112,25 +120,26 @@ class Pricing_Manager {
 	public function init_hooks(): void {
 		add_action( 'init', array( $this, 'init' ), 1 );
 
-		$admin_settings         = new Admin_Settings( $this->settings_repository );
-		$variation_pricing      = new Variation_Pricing_Admin( $this->product_meta_repository );
-		$customer_price_filters = new Price_Filter( $this->price_calculator, $this->exchange_rate_provider );
-		$order_pricing_metadata = new Order_Pricing_Metadata( $this->product_meta_repository, $this->exchange_rate_provider, $this->price_calculator );
-		$digital_statuses       = new Digital_Processing_Statuses();
-		$admin_dashboard        = new Admin_Dashboard( new Dashboard_Repository() );
-
-		$admin_settings->register_hooks();
-		$variation_pricing->register_hooks();
-		$customer_price_filters->register_hooks();
-		$order_pricing_metadata->register_hooks();
-		$digital_statuses->register_hooks();
-		$admin_dashboard->register_hooks();
 	}
 
 	/**
 	 * Initialize the plugin.
 	 */
 	public function init(): void {
+		$admin_settings         = new Admin_Settings( $this->settings_repository );
+		$variation_pricing      = new Variation_Pricing_Admin( $this->product_meta_repository );
+		$customer_price_filters = new Price_Filter( $this->price_calculator, $this->exchange_rate_provider, $this->error_handler );
+		$order_pricing_metadata = new Order_Pricing_Metadata( $this->product_meta_repository, $this->exchange_rate_provider, $this->price_calculator, $this->error_handler );
+		$digital_statuses       = new Digital_Processing_Statuses();
+		$admin_dashboard        = new Admin_Dashboard( new Dashboard_Repository() );
+
+		$admin_settings->register_hooks();
+		$this->error_handler->register_hooks();
+		$variation_pricing->register_hooks();
+		$customer_price_filters->register_hooks();
+		$order_pricing_metadata->register_hooks();
+		$digital_statuses->register_hooks();
+		$admin_dashboard->register_hooks();
 	}
 
 	/**

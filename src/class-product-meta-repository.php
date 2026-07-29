@@ -26,7 +26,7 @@ class Product_Meta_Repository {
 	public function get_base_price_usd( int $variation_id ): ?float {
 		$value = get_post_meta( $variation_id, self::META_BASE_PRICE_USD, true );
 
-		if ( '' === $value ) {
+		if ( '' === $value || ! is_numeric( $value ) ) {
 			return null;
 		}
 
@@ -42,7 +42,7 @@ class Product_Meta_Repository {
 	public function get_profit_margin( int $variation_id ): float {
 		$value = get_post_meta( $variation_id, self::META_PROFIT_MARGIN, true );
 
-		if ( '' === $value ) {
+		if ( '' === $value || ! is_numeric( $value ) ) {
 			return 0;
 		}
 

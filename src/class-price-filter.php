@@ -29,14 +29,23 @@ class Price_Filter {
 	private Exchange_Rate_Provider $exchange_rate_provider;
 
 	/**
+	 * Pricing error handler.
+	 *
+	 * @var Pricing_Error_Handler
+	 */
+	private Pricing_Error_Handler $error_handler;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Price_Calculator       $price_calculator       Price calculator.
 	 * @param Exchange_Rate_Provider $exchange_rate_provider Exchange rate provider.
+	 * @param Pricing_Error_Handler  $error_handler          Pricing error handler.
 	 */
-	public function __construct( Price_Calculator $price_calculator, Exchange_Rate_Provider $exchange_rate_provider ) {
+	public function __construct( Price_Calculator $price_calculator, Exchange_Rate_Provider $exchange_rate_provider, Pricing_Error_Handler $error_handler ) {
 		$this->price_calculator       = $price_calculator;
 		$this->exchange_rate_provider = $exchange_rate_provider;
+		$this->error_handler          = $error_handler;
 	}
 
 	/**
@@ -70,7 +79,20 @@ class Price_Filter {
 			return $price;
 		}
 
-		$calculated_price = $this->price_calculator->calculate_variation_price( $variation_id );
+		try {
+			$calculated_price = $this->price_calculator->calculate_variation_price( $variation_id );
+		} catch ( \Throwable $exception ) {
+			$this->error_handler->report(
+				'price_filter_exception',
+				__( 'Pricing Manager could not prepare a customer-facing price.', 'pricing-manager' ),
+				array(
+					'variation_id' => $variation_id,
+					'exception'    => $exception->getMessage(),
+				)
+			);
+
+			return $price;
+		}
 
 		return null === $calculated_price ? $price : (string) $calculated_price;
 	}
@@ -89,7 +111,20 @@ class Price_Filter {
 			return $price;
 		}
 
-		$calculated_price = $this->price_calculator->calculate_variation_price( $variation_id );
+		try {
+			$calculated_price = $this->price_calculator->calculate_variation_price( $variation_id );
+		} catch ( \Throwable $exception ) {
+			$this->error_handler->report(
+				'sale_price_filter_exception',
+				__( 'Pricing Manager could not prepare a customer-facing sale price.', 'pricing-manager' ),
+				array(
+					'variation_id' => $variation_id,
+					'exception'    => $exception->getMessage(),
+				)
+			);
+
+			return $price;
+		}
 
 		return null === $calculated_price ? $price : '';
 	}
@@ -139,7 +174,19 @@ class Price_Filter {
 		$variation_prices = array();
 
 		foreach ( $product->get_children() as $variation_id ) {
-			$variation_prices[ $variation_id ] = $this->price_calculator->calculate_variation_price( (int) $variation_id );
+			try {
+				$variation_prices[ $variation_id ] = $this->price_calculator->calculate_variation_price( (int) $variation_id );
+			} catch ( \Throwable $exception ) {
+				$variation_prices[ $variation_id ] = null;
+				$this->error_handler->report(
+					'price_hash_exception',
+					__( 'Pricing Manager could not include a variation in the price cache hash.', 'pricing-manager' ),
+					array(
+						'variation_id' => (int) $variation_id,
+						'exception'    => $exception->getMessage(),
+					)
+				);
+			}
 		}
 
 		$hash['pricing_manager_variation_prices'] = wp_json_encode( $variation_prices );
