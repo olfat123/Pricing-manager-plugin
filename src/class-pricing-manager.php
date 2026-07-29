@@ -117,12 +117,14 @@ class Pricing_Manager {
 		$customer_price_filters = new Price_Filter( $this->price_calculator, $this->exchange_rate_provider );
 		$order_pricing_metadata = new Order_Pricing_Metadata( $this->product_meta_repository, $this->exchange_rate_provider, $this->price_calculator );
 		$digital_statuses       = new Digital_Processing_Statuses();
+		$admin_dashboard        = new Admin_Dashboard( new Dashboard_Repository() );
 
 		$admin_settings->register_hooks();
 		$variation_pricing->register_hooks();
 		$customer_price_filters->register_hooks();
 		$order_pricing_metadata->register_hooks();
 		$digital_statuses->register_hooks();
+		$admin_dashboard->register_hooks();
 	}
 
 	/**
