@@ -6,6 +6,12 @@
  * Author: Olfat Hakeem
  * Version: 1.0.0
  * Text Domain: pricing-manager
+ * Requires Plugins: woocommerce
+ * Requires PHP: 8.2
+ * Requires at least: 6.8
+ * Tested up to: 7.0.2
+ * WC requires at least: 10.1
+ * WC tested up to: 10.9.4
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,12 +56,7 @@ if ( ! defined( 'PRICING_MANAGER_PLUGIN_TEMPLATES_DIR_PATH' ) ) {
 if ( ! defined( 'PRICING_MANAGER_PLUGIN_DIR_URL' ) ) {
 	define( 'PRICING_MANAGER_PLUGIN_DIR_URL', untrailingslashit( plugins_url( '/', PRICING_MANAGER_PLUGIN_FILE ) ) );
 }
-if ( ! defined( 'PRICING_MANAGER_PLUGIN_JS_DIR_URL' ) ) {
-	define( 'PRICING_MANAGER_PLUGIN_JS_DIR_URL', untrailingslashit( plugins_url( '/assets/js/', PRICING_MANAGER_PLUGIN_FILE ) ) );
-}
-if ( ! defined( 'PRICING_MANAGER_PLUGIN_CSS_DIR_URL' ) ) {
-	define( 'PRICING_MANAGER_PLUGIN_CSS_DIR_URL', untrailingslashit( plugins_url( '/assets/css/', PRICING_MANAGER_PLUGIN_FILE ) ) );
-}
+
 
 register_activation_hook(
 	__FILE__,
@@ -81,6 +82,25 @@ register_deactivation_hook(
 	}
 );
 
-require_once plugin_dir_path( __FILE__ ) . '/vendor/autoload_packages.php';
+add_action(
+	'before_woocommerce_init',
+	function () {
+		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+		}
+	}
+);
+
+if ( file_exists( plugin_dir_path( __FILE__ ) . '/vendor/autoload_packages.php' ) ) {
+	require_once plugin_dir_path( __FILE__ ) . '/vendor/autoload_packages.php';
+}
+
+require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-settings-repository.php';
+require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-exchange-rate-provider.php';
+require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-product-meta-repository.php';
+require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-price-calculator.php';
+require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-variation-pricing-admin.php';
+require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-price-filter.php';
+require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-pricing-manager.php';
 
 Pricing_Manager::instance();

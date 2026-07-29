@@ -24,9 +24,42 @@ class Pricing_Manager {
 	protected static ?Pricing_Manager $instance = null;
 
 	/**
+	 * Settings repository.
+	 *
+	 * @var Settings_Repository
+	 */
+	private Settings_Repository $settings_repository;
+
+	/**
+	 * Exchange rate provider.
+	 *
+	 * @var Exchange_Rate_Provider
+	 */
+	private Exchange_Rate_Provider $exchange_rate_provider;
+
+	/**
+	 * Product meta repository.
+	 *
+	 * @var Product_Meta_Repository
+	 */
+	private Product_Meta_Repository $product_meta_repository;
+
+	/**
+	 * Price calculator.
+	 *
+	 * @var Price_Calculator
+	 */
+	private Price_Calculator $price_calculator;
+
+	/**
 	 * Construct the plugin.
 	 */
 	public function __construct() {
+		$this->settings_repository     = new Settings_Repository();
+		$this->exchange_rate_provider  = new Exchange_Rate_Provider( $this->settings_repository );
+		$this->product_meta_repository = new Product_Meta_Repository();
+		$this->price_calculator        = new Price_Calculator( $this->exchange_rate_provider, $this->product_meta_repository );
+
 		add_action( 'init', array( $this, 'load_plugin' ), 0 );
 		add_action( 'pricing_manager_plugin_activated', array( $this, 'activation_hooks' ) );
 		add_action( 'pricing_manager_plugin_deactivated', array( $this, 'deactivation_hooks' ) );
@@ -52,7 +85,11 @@ class Pricing_Manager {
 	 * Plugin activation hooks.
 	 */
 	public function activation_hooks() {
-		// Activation hooks here.
+		if ( false === get_option( Settings_Repository::OPTION_EXCHANGE_RATE, false ) ) {
+			update_option( Settings_Repository::OPTION_EXCHANGE_RATE, 0 );
+		}
+
+		$this->exchange_rate_provider->ensure_default_exchange_rate();
 	}
 
 	/**
@@ -65,6 +102,11 @@ class Pricing_Manager {
 	 * Determine which plugin to load.
 	 */
 	public function load_plugin(): void {
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			add_action( 'admin_notices', array( $this, 'render_woocommerce_missing_notice' ) );
+			return;
+		}
+
 		$this->init_hooks();
 	}
 
@@ -73,6 +115,12 @@ class Pricing_Manager {
 	 */
 	public function init_hooks(): void {
 		add_action( 'init', array( $this, 'init' ), 1 );
+
+		$variation_pricing      = new Variation_Pricing_Admin( $this->product_meta_repository );
+		$customer_price_filters = new Price_Filter( $this->price_calculator, $this->exchange_rate_provider );
+
+		$variation_pricing->register_hooks();
+		$customer_price_filters->register_hooks();
 	}
 
 	/**
@@ -81,4 +129,19 @@ class Pricing_Manager {
 	public function init(): void {
 	}
 
+	/**
+	 * Render a WooCommerce dependency notice.
+	 *
+	 * @return void
+	 */
+	public function render_woocommerce_missing_notice(): void {
+		if ( ! current_user_can( 'activate_plugins' ) ) {
+			return;
+		}
+
+		printf(
+			'<div class="notice notice-error"><p>%s</p></div>',
+			esc_html__( 'Pricing Manager requires WooCommerce to be installed and active.', 'pricing-manager' )
+		);
+	}
 }
