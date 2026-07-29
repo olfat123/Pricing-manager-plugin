@@ -104,6 +104,8 @@ require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-variation-pricing-adm
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-price-filter.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-order-pricing-metadata.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-digital-processing-statuses.php';
+require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-dashboard-repository.php';
+require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-admin-dashboard.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-pricing-manager.php';
 
 Pricing_Manager::instance();
