@@ -99,6 +99,7 @@ require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-settings-repository.p
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-exchange-rate-provider.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-product-meta-repository.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-price-calculator.php';
+require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-admin-settings.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-variation-pricing-admin.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-price-filter.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-pricing-manager.php';

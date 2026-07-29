@@ -85,10 +85,6 @@ class Pricing_Manager {
 	 * Plugin activation hooks.
 	 */
 	public function activation_hooks() {
-		if ( false === get_option( Settings_Repository::OPTION_EXCHANGE_RATE, false ) ) {
-			update_option( Settings_Repository::OPTION_EXCHANGE_RATE, 0 );
-		}
-
 		$this->exchange_rate_provider->ensure_default_exchange_rate();
 	}
 
@@ -116,9 +112,11 @@ class Pricing_Manager {
 	public function init_hooks(): void {
 		add_action( 'init', array( $this, 'init' ), 1 );
 
+		$admin_settings         = new Admin_Settings( $this->settings_repository );
 		$variation_pricing      = new Variation_Pricing_Admin( $this->product_meta_repository );
 		$customer_price_filters = new Price_Filter( $this->price_calculator, $this->exchange_rate_provider );
 
+		$admin_settings->register_hooks();
 		$variation_pricing->register_hooks();
 		$customer_price_filters->register_hooks();
 	}

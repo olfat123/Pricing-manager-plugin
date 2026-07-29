@@ -70,7 +70,7 @@ class Exchange_Rate_Provider {
 		$rate    = isset( $payload['rates']['EGP'] ) ? (float) $payload['rates']['EGP'] : 0;
 
 		if ( $rate > 0 ) {
-			$this->settings_repository->save_exchange_rate( $rate );
+			$this->settings_repository->save_online_exchange_rate( $rate );
 			delete_transient( Settings_Repository::TRANSIENT_RATE_LOCK );
 		}
 
