@@ -103,6 +103,7 @@ require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-admin-settings.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-variation-pricing-admin.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-price-filter.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-order-pricing-metadata.php';
+require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-digital-processing-statuses.php';
 require_once PRICING_MANAGER_PLUGIN_DIR_PATH . '/src/class-pricing-manager.php';
 
 Pricing_Manager::instance();
