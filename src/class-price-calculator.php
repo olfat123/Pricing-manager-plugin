@@ -60,6 +60,10 @@ class Price_Calculator {
 			$exchange_rate  = $this->exchange_rate_provider->get_exchange_rate();
 
 			if ( null === $base_price_usd ) {
+				if ( ! $this->product_meta_repository->has_pricing_metadata( $variation_id ) ) {
+					return null;
+				}
+
 				$this->error_handler->report(
 					'missing_base_price',
 					__( 'Pricing Manager found a variation without a valid base USD price.', 'pricing-manager' ),
